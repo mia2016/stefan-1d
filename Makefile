@@ -1,4 +1,5 @@
-CFLAGS=-Wall
+CFLAGS=-Wall -g
+LDFLAGS=-lm
 
 SRC_DIR=src
 OBJ_DIR=obj
@@ -11,7 +12,7 @@ OBJS=$(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 PROGRAM=bin/main
 
 $(PROGRAM): $(OBJS) $(BIN_DIR)
-	$(CC) $(OBJS) -o $@
+	$(CC) $(OBJS) $(CFLAGS) $(LDFLAGS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(OBJ_DIR)
 	$(CC) -c $< $(CPPFLAGS) $(CFLAGS) -o $@
