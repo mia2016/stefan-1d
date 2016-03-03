@@ -2,56 +2,64 @@
 #include <stdio.h>
 #include <math.h>
 
+/**
+ * Prints the temperatures as a function of the position x.
+ */
+void printCsv(double * temperatures, int nTemperatures, double s) {
+    printf("x, u\n");
+    for (int i = 0; i < nTemperatures; i++) {
+        printf("%f, %f\n", i * s / (nTemperatures - 1), temperatures[i]);
+    }
+}
+
+
 int main(int argv, char ** argc) {
 
+    // Start values
     int nTemperatures = 80;
     double t = 0.1;
     double endTime = 0.5;
     double dt = 0.0000001;
     double s = t;
-    double ds = 0.0;
-    //double initialTemperature = 1.0;
+    double ds = dt;
 
     // Create an fill array of temperatures
     double * temperatures = malloc(sizeof(double) * nTemperatures);
 
     for (int i = 0; i < nTemperatures - 1; i++) {
-        //temperatures[i] = initialTemperature;
-        temperatures[i] = exp(t - i * s / nTemperatures) - 1;
+        temperatures[i] = exp(t - i * s / (nTemperatures - 1)) - 1;
     }
 
     temperatures[nTemperatures - 1] = 0.0;
 
-    // Print header for csv output
-    printf("t");
-    for (int i = 0; i < nTemperatures; i++) {
-        printf(", u[%i]", i);
-    }
-    printf(", s\n");
 
-    // Step forward in time
-    while (t < endTime) {
-        double h = s / nTemperatures;
-        double r = dt / (h * h);
+    // Main loop
+    while (t <= endTime) {
 
-        // Cache previous temperature thorugh the loop
+        double dx = s / (nTemperatures - 1);
+        double dx2 = dx * dx;
+        double r = dt / dx2;
+
+        // Cache values to avoid copying entire array
         double prev_u = temperatures[0];
+        double next_ds = -(
+                    dt * (
+                        3 * temperatures[nTemperatures - 1]
+                        -4 * temperatures[nTemperatures - 2]
+                       + temperatures[nTemperatures - 3]
+                    )
+                ) / (2 * dx);
 
         // Boundary
         temperatures[0] = (1 - 2 * r) * temperatures[0] + 2 * r * temperatures[1]
-                + (2 * r * h) * exp(t);
+                + 2 * dx * r * exp(t);
 
 
         // Interior
         for (int i = 1; i < nTemperatures - 1; i++) {
 
-            double du = ((temperatures[i + 1] - prev_u) * dt * ds * i)
-                    / (2 * dt * h * nTemperatures)
-                + (
-                    temperatures[i + 1]
-                    - 2 * temperatures[i]
-                    + prev_u
-                ) * r;
+            double du = ((temperatures[i + 1] - prev_u) * i * ds) / (2 * s)
+                + (temperatures[i + 1] - 2 * temperatures[i] + prev_u) * r;
 
             // Update temperatures
             prev_u = temperatures[i];
@@ -59,32 +67,23 @@ int main(int argv, char ** argc) {
         }
 
 
-        // Update boundary position
-        double ds = -(
-                    dt * (
-                        3 * temperatures[nTemperatures - 1]
-                        -4 * temperatures[nTemperatures - 2]
-                       + temperatures[nTemperatures - 3]
-                    )
-                ) / (2 * h);
-
-        s += ds;
 
         // Check condition for stability
-        if (dt > (2 * h * h) / (4 + (h * ds * ds)/(dt * dt))) {
-            fprintf(stderr, "WARNING: Condition for stability not fulfilled.\n");
+        if (dt > (2 * dx2) / (4 + (dx2 * ds * ds)/(dt * dt))) {
+            fprintf(stderr, "ERROR: Condition for stability not fulfilled.\n");
+            return EXIT_FAILURE;
         }
 
+        // Integrate
+        ds = next_ds;
+        s += ds;
         t += dt;
     }
-        // Print temperatures
-        printf("%f", t);
-        for (int i = 0; i < nTemperatures; i++) {
-            printf(", %f", temperatures[i]);
-        }
-        printf(", %f\n", s);
 
-    // Clean up and return
+
+    // Print and clean up
+    printCsv(temperatures, nTemperatures, s);
     free(temperatures);
-    return 0;
+
+    return EXIT_SUCCESS;
 }
