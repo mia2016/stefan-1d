@@ -1,4 +1,4 @@
-CFLAGS=-Wall -g
+CFLAGS=-Wall -g -std=c11
 LDFLAGS=-lm
 
 SRC_DIR=src
