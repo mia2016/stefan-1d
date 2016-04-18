@@ -1,14 +1,10 @@
 #pragma once
+#include "material.h"
+#include "phase.h"
+
 
 /**
  * Represents the state of a stefan problem with 2 moving boundaries.
- *
- * The domain of the problem runs from 0 to s[3] and is modelled using n points,
- * where n is the problem's resolution.
- *	
- *	0       s[0]            s[1]             s[3]
- *	|--------|--- Phase 1 ---|---- Phase 2 ----|
- *
  */
 typedef struct {
 
@@ -20,11 +16,14 @@ typedef struct {
     double time;
     double dt;
 
-    // Current boundary positions. Note that s[2] is assumed stationary.
-    double s[3];
+    // Current boundaries
+	border_t borders[3];
 
-	// Temperatures on each side of the middle boundary and top
-	float boundary_temperature[3];
+	// Material properties of the two phases
+	material_t materials[2];
+
+	//TODO: Description and better name
+	double beta;
 
 } problem_t;
 

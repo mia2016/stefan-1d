@@ -3,62 +3,15 @@
 #include <stdlib.h>
 
 #include "problem.h"
+#include "error.h"
+#include "interpolate.h"
 
-typedef struct {
-	double x, y;
-} point_t;
-
-/**
- * Calculates the next iteration using the heat equations.
- * Boundaries are assumed to already have been calculated, thus the first and
- * last point is left alone. The range of points to consider is calculated using
- * the bounds array.
- *
- * @param u Array of temperatures
- * @param bounds Start and end positions of phase (array of length 2)
- * @param c Constant used in heat equation (TODO)
- */
-void calculate_interior(double * u, double * bounds, double c) {
-	double prev_u = u[0];
-
-	for (unsigned i = bounds[0]; i < bounds[1]; i++) {
-		//TODO: Update code to match problem...
-		double du = 0.0 * prev_u;
-
-		// Update u
-		prev_u = u[i];
-		u[i] += du;
-	}
-}
-
-/**
- * TODO
- */
-double interpolate_double_differentiated() {
-	return 0.0;
-}
-
-
-/**
- * Calculates the interpolated value of a point x given three other points.
- *
- * @param a Point 1
- * @param b Point 2
- * @param c Point 3
- * @param x Point at which to calculate interpolated value
- * @return Interpolated value
- */
-double interpolate_value(point_t a, point_t b, point_t c, double x) {
-	return (a.y * (x - b.x) * (x - c.x)) / ((a.x - b.x) * (a.x - c.x))
-		+ (b.y * (x - a.x) * (x - c.x)) / ((b.x - a.x) * (b.x - c.x))
-		+ (c.y * (x - b.x) * (x - a.x)) / ((c.x - b.x) * (c.x - a.x));
-}
 
 
 problem_t problem_create(unsigned resolution, double temperature) {
 	problem_t problem = {0};
 
-	// Allocate memory for temperatures
+	// Allocate and initialize temperatures
 	problem.resolution = resolution;
 	problem.temperatures = malloc(sizeof(double) * resolution);
 	
@@ -69,6 +22,12 @@ problem_t problem_create(unsigned resolution, double temperature) {
 
 	for (unsigned i = 0; i < resolution; i++) {
 		problem.temperatures[i] = temperature;
+	}
+
+	// Initialize boundary temperatures
+	for (unsigned i = 0; i < 4; i++) {
+		problem.borders[i].u[0] = temperature;
+		problem.borders[i].u[1] = temperature;
 	}
 
 	return problem;
@@ -97,76 +56,75 @@ void problem_print(problem_t * problem) {
 }
 
 
-void problem_iterate(problem_t * problem, double untilTime) {
+void problem_iterate(problem_t * p, double untilTime) {
 
     // Copy values from struct (for cleaner code)
-    double * temps = problem->temperatures;
+    //double * temps = p->temperatures;
 
-    double t = problem->time;
-    double dt = problem->dt;
-    double * s = problem->s;
-
-	// Check condition for stability
-	if (0 /*TODO*/) {
-		fprintf(stderr, "ERROR: Condition for stability not fulfilled.\n");
-		exit(EXIT_FAILURE);
-	}
-
+    double dt = p->dt;
+	double t;
 
     // Main loop
-	for (double t = problem->time; t <= untilTime; t += dt) {
+	printf("Starting...\n");
+	for (t = p->time; t <= untilTime; t += dt) {
+		printf("\r\33[2KProgress: %.2lf%%", 100 * (t - p->time) / (untilTime - p->time));
 
 
-        // Calculate ds now to avoid copying entire array
-        double ds[] = {
-			0.0, //TODO
-			0.0	//TODO
+		//TODO: Calculate heat fluxes
+
+
+		//TODO: Calculate boundary movements
+		double ds[] = {
+			0.0,
+			0.0
 		};
 
 
-        // Boundary conditions
-			// Including boundary temperatures
-
-
-		// Interior for each phase
-		calculate_interior(temps, s, 1.234);
-		calculate_interior(temps, s + 1, 1.234);
+		// Update each phase
+		for (unsigned i = 0; i < 2; i++) {
+			phase_update(
+				p->borders + i,
+				p->borders + i + 1,
+				p->temperatures,
+				p->materials + i
+			);
+		}
 
 
 		// Update boundaries (including checking for points crossing it)
-		for (unsigned i = 0; i < 2; i++) {
-			// Check assumption
+		for (unsigned i = 1; i < 3; i++) {
+
+			// We assume a border never crosses more than a single point
 			if (ds[i] >= 1.0) {
-				fprintf(stderr, "ERROR: Interface %u is moving too fast!", i);
-				exit(EXIT_FAILURE);
+				error_fatal("A border is moving too fast.");
 			}
 
-			double next_s = s[i] + ds[i];
-			unsigned movement = (unsigned) next_s - (unsigned) s[i];
+			double next_s = p->borders[i].position + ds[i - 1];
+			unsigned movement = (unsigned) next_s - (unsigned) p->borders[i].position;
 
 			// Move point between phases
-			if (movement > 0 && i > 0) {
+			if (movement > 0) {
 
 				// New point in phase i
-				temps[(unsigned) s[i]] = 0.0; //TODO: Interpolation
+				p->temperatures[(unsigned) p->borders[i].position] = 0.0; //TODO: Interpolation using above method
 
 			} else if (movement < 0) {
 
 				// Lost point in phase i - it ends up in i+1
-				temps[(unsigned) s[i]] = 0.0; //TODO: Interpolation
+				p->temperatures[(unsigned) p->borders[i].position] = 0.0; //TODO: Interpolation
 
 			}
 
-			s[i] = next_s;
+			p->borders[i].position = next_s;
 		}
+
 
     }
 
     // Update problem
-    problem->time = t;
-    problem->dt = dt;
+    p->time = t;
+    p->dt = dt;
 
-	for (unsigned i = 0; i < 3; i++) {
-		problem->s[i] = s[i];
-	}
+	printf("\r\33[2KDone\n\n");
+
 }
