@@ -25,8 +25,6 @@ int main(int argv, char ** argc) {
 
 
 	//TODO: Continue initialization
-	problem.time = 0;
-	problem.dt = 0.001;
 
 	problem.borders[0].position = 2.4;
 	problem.borders[1].position = 5.0;
@@ -37,7 +35,7 @@ int main(int argv, char ** argc) {
 	problem.beta = 0.0;
 
 
-    problem_iterate(&problem, 0.5);
+    problem_iterate(&problem, 100000);
     problem_print(&problem);
 	problem_destroy(&problem);
 

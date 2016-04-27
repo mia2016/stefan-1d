@@ -56,18 +56,17 @@ void problem_print(problem_t * problem) {
 }
 
 
-void problem_iterate(problem_t * p, double untilTime) {
-
-    // Copy values from struct (for cleaner code)
-    //double * temps = p->temperatures;
-
-    double dt = p->dt;
-	double t;
+void problem_iterate(problem_t * p, unsigned untilTime) {
 
     // Main loop
 	printf("Starting...\n");
-	for (t = p->time; t <= untilTime; t += dt) {
-		printf("\r\33[2KProgress: %.2lf%%", 100 * (t - p->time) / (untilTime - p->time));
+	while (p->time <= untilTime) {
+
+        // Update progress in command line interface
+        if (p->time % 10000 == 0) {
+            printf("\r\33[2KProgress: %.2f%%", 100 * (float) p->time / untilTime);
+            fflush(stdout);
+        }
 
 
 		//TODO: Calculate heat fluxes
@@ -119,11 +118,8 @@ void problem_iterate(problem_t * p, double untilTime) {
 		}
 
 
+        p->time++;
     }
-
-    // Update problem
-    p->time = t;
-    p->dt = dt;
 
 	printf("\r\33[2KDone\n\n");
 

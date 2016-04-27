@@ -13,8 +13,7 @@ typedef struct {
     double * temperatures;
 
     // Current time and timestep
-    double time;
-    double dt;
+    unsigned time;
 
     // Current boundaries
 	border_t borders[3];
@@ -59,4 +58,4 @@ void problem_print(problem_t * problem);
  * @param problem Problem to iterate
  * @param untilTime Simulation time at which to stop the iteration
  */
-void problem_iterate(problem_t * problem, double untilTime);
+void problem_iterate(problem_t * problem, unsigned untilTime);
