@@ -13,3 +13,7 @@ double interpolate_value(point_t a, point_t b, point_t c, double x) {
 		+ (b.y * (x - a.x) * (x - c.x)) / ((b.x - a.x) * (b.x - c.x))
 		+ (c.y * (x - b.x) * (x - a.x)) / ((c.x - b.x) * (c.x - a.x));
 }
+
+double interpolate_next(double a, double b, double c) {
+	return a - 3.0 * b + 3.0 * c;
+}

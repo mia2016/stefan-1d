@@ -89,10 +89,27 @@ void test_interpolate_sd() {
 }
 
 
+void test_interpolate_next() {
+    ASSERT(
+        "Handles linear interpolation",
+        double_equal(interpolate_next(1.0, 2.0, 3.0), 4.0) && 
+        double_equal(interpolate_next(-1.0, -2.0, -3.0), -4.0) && 
+        double_equal(interpolate_next(0.0, 0.0, 0.0), 0.0)
+    );
+
+    ASSERT(
+        "Correcly calculates some more advanced examples",
+        double_equal(interpolate_next(0.0, 1.0, 0.0), -3.0) &&
+        double_equal(interpolate_next(0.0, 1.0, 1.0), 0.0)
+    );
+}
+
+
 int main(int argc, char ** argv) {
 
 	RUN(test_interpolate_value);
     RUN(test_interpolate_sd);
+    RUN(test_interpolate_next);
 
 	return TEST_REPORT();
 }

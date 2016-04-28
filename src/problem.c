@@ -8,6 +8,47 @@
 
 
 
+/**
+ * Moves a border and migrates points across phases if necessary.
+ *
+ * @param p Problem containing border to move
+ * @param i Index of border to move (in problem)
+ * @param distance Distance to move border (can be negative)
+ */
+void move_border(problem_t * p, unsigned i, double distance) {
+
+    // We assume a border never crosses more than a single point
+    if (distance >= 1.0) {
+        error_fatal("A border is moving too fast.");
+    }
+
+    unsigned bp = p->borders[i].position;
+    double next_position = p->borders[i].position + distance;
+    unsigned movement = (unsigned) next_position - bp;
+
+    // Move point between phases?
+    if (movement > 0) {
+
+        p->temperatures[bp + 1] = interpolate_next(
+                p->temperatures[bp - 2],
+                p->temperatures[bp - 1],
+                p->temperatures[bp]
+            );
+
+    } else if (movement < 0) {
+
+        p->temperatures[bp] = interpolate_next(
+                p->temperatures[bp + 3],
+                p->temperatures[bp + 2],
+                p->temperatures[bp + 1]
+            );
+
+    }
+
+    p->borders[i].position = next_position;
+}
+
+
 problem_t problem_create(unsigned resolution, double temperature) {
 	problem_t problem = {0};
 
@@ -109,31 +150,8 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
 
 
 		// Update boundaries (including checking for points crossing it)
-		for (unsigned i = 1; i < 3; i++) {
-
-			// We assume a border never crosses more than a single point
-			if (ds[i] >= 1.0) {
-				error_fatal("A border is moving too fast.");
-			}
-
-			double next_s = p->borders[i].position + ds[i - 1];
-			unsigned movement = (unsigned) next_s - (unsigned) p->borders[i].position;
-
-			// Move point between phases
-			if (movement > 0) {
-
-				// New point in phase i
-				p->temperatures[(unsigned) p->borders[i].position] = 0.0; //TODO: Interpolation using above method
-
-			} else if (movement < 0) {
-
-				// Lost point in phase i - it ends up in i+1
-				p->temperatures[(unsigned) p->borders[i].position] = 0.0; //TODO: Interpolation
-
-			}
-
-			p->borders[i].position = next_s;
-		}
+        move_border(p, 1, ds[0]);
+        move_border(p, 2, ds[1]);
 
 
         p->time++;
