@@ -31,7 +31,7 @@ static inline double a_heat_equation(double a, double ul, double u, double ur, d
 void phase_update(border_t * a, border_t * b, double * u, material_t * material) {
 
     if ((int) b->position - (int) a->position < 2) {
-        error_fatal("Phase two small (less than two points)");
+        error_fatal("Phase too small (less than two points)");
     }
 
     double alpha = material->alpha;
@@ -132,7 +132,7 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
 
     } else {
         // Use special heat equation with dx = b_f
-        b->u[1] = a_heat_equation(
+        b->u[0] = a_heat_equation(
                 alpha,
                 prev_u,
                 b->u[0],
