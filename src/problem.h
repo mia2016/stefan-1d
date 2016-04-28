@@ -5,6 +5,12 @@
 
 /**
  * Represents the state of a stefan problem with 2 moving boundaries.
+ *
+ * The domain is devided roughly like this:
+ *
+ *  borders[1]           borders[2]            borders[3]
+ *     |------ Phase 1 ------|------ Phase 2 ------|
+ *
  */
 typedef struct {
 
