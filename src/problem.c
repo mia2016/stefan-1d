@@ -58,6 +58,12 @@ void problem_print(problem_t * problem) {
 
 void problem_iterate(problem_t * p, unsigned untilTime) {
 
+    // Precalculate some constants needed later
+    double k[] = {
+        p->beta / (p->materials[0].rho * p->materials[1].L),
+        - 1.0 / (p->materials[1].rho * p->materials[1].L)
+    };
+
     // Main loop
 	printf("Starting...\n");
 	while (p->time <= untilTime) {
@@ -72,11 +78,23 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
 		//TODO: Calculate heat fluxes
 
 
-		//TODO: Calculate boundary movements
-		double ds[] = {
-			0.0,
-			0.0
-		};
+        //TODO: Fix this
+        if (p->borders[2].q < 0) {
+            error_warning("Energy flowing from snow to air not modelled");
+        }
+
+		// Calculate boundary movements
+		double ds[2] = {0};
+
+        if (p->borders[2].u[0] >= 0.0) {
+
+            // Melt some snow
+            ds[0] = k[0] * p->borders[2].q;
+            ds[1] = (k[0] + k[1]) * p->borders[2].q;
+
+            // Don't count this heat later
+            p->borders[2].q = 0;
+        }
 
 
 		// Update each phase
