@@ -2,9 +2,9 @@
 
 double interpolate_sd(double d, double u1, double u2, double u3) {
 	return 2 * (
-            u1 / (1.0 + d)
+            u3 / (1.0 + d)
             - u2 / d
-            + u3 / (d * (1 + d))
+            + u1 / (d * (1.0 + d))
         );
 }
 
