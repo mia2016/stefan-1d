@@ -18,7 +18,7 @@
 void move_border(problem_t * p, unsigned i, double distance) {
 
     // We assume a border never crosses more than a single point
-    if (distance >= 1.0) {
+    if (abs(distance) >= 1.0) {
         error_fatal("A border is moving too fast.");
     }
 
@@ -29,18 +29,22 @@ void move_border(problem_t * p, unsigned i, double distance) {
     // Move point between phases?
     if (movement > 0) {
 
-        p->temperatures[bp + 1] = interpolate_next(
-                p->temperatures[bp - 2],
-                p->temperatures[bp - 1],
-                p->temperatures[bp]
+        // New point in phase i
+        p->temperatures[bp + 1] = interpolate_value(
+                (point_t) {bp - 1, p->temperatures[bp - 1]},
+                (point_t) {bp, p->temperatures[bp]},
+                (point_t) {next_position, p->borders[i].u[0]},
+                bp + 1
             );
 
     } else if (movement < 0) {
 
-        p->temperatures[bp] = interpolate_next(
-                p->temperatures[bp + 3],
-                p->temperatures[bp + 2],
-                p->temperatures[bp + 1]
+        // Lost point in phase i - it ends up in i+1
+        p->temperatures[bp] = interpolate_value(
+                (point_t) {bp + 2, p->temperatures[bp + 2]},
+                (point_t) {bp + 1, p->temperatures[bp + 1]},
+                (point_t) {next_position, p->borders[i].u[1]},
+                bp
             );
 
     }

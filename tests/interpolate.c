@@ -2,7 +2,7 @@
 #include "../src/interpolate.c"
 
 /**
- * Tests the problem module.
+ * Tests the interpolation module.
  */
 
 

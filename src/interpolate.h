@@ -28,7 +28,6 @@ double interpolate_sd(double d, double u1, double u2, double u3);
 
 /**
  * Calculates the interpolated value of a point x given three other points.
- * TODO: Is this used anywhere?
  *
  * @param a Point 1
  * @param b Point 2
@@ -40,16 +39,18 @@ double interpolate_value(point_t a, point_t b, point_t c, double x);
 
 
 /**
- * Calculates the next value in a set of equally spaced points using langrange
+ * Calculates the next value in a set of unitly spaced points using langrange
  * interpolation.
+ * TODO: Is this used anywhere?
  *
  *  p1    p2    p3    p4
  *   |-----|-----|-----|
- *      d     d     d
+ *      1     1     d
  *
  * @param a Value at point 1
  * @param b Value at point 2
  * @param c Value at point 3
+ * @param d Distance between point 3 and 4
  * @return Value at point 4
  */
 double interpolate_next(double a, double b, double c);
