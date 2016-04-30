@@ -1,4 +1,4 @@
-CFLAGS=-Wall -g -std=c11
+CFLAGS=-Wall -g -std=c11 -fsanitize=float-divide-by-zero
 LDFLAGS=-lm
 
 SRC_DIR=src
@@ -27,7 +27,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR) $(DEP_DIR)
 # Tests
 $(BIN_DIR)/test_%: $(TEST_DIR)/%.c | $(BIN_DIR) $(DEP_DIR)
 	$(CC) -MM -MP -MT $@ $< > $(DEP_DIR)/test_$*.d
-	$(CC) $(CPPFLAGS) -Iinclude $(CFLAGS) $<	-o $@
+	$(CC) $(CPPFLAGS) -Iinclude $(CFLAGS) $< $(LDFLAGS) -o $@
 
 # Temporary folders
 $(TMP_DIRS):
