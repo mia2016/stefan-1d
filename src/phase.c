@@ -41,7 +41,7 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
     // Update border value
     prev_u = a->u[1];
     a->u[1] += alpha * (
-            a_f * a->q / kappa +
+            a_f * a->q[1] / kappa +
             2 * a->u[1] +
             2 * u[i]
         ) / (a_f * a_f);
@@ -97,7 +97,7 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
     b->u[0] += alpha * (
             2 * prev_u +
             2 * b->u[0] +
-            b_f * (- b->q) / kappa
+            b_f * (- b->q[0]) / kappa
         ) / (b_f * b_f);
 
 

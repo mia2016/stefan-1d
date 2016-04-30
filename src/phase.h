@@ -13,7 +13,7 @@ typedef struct {
     double u[2];
 
     // Heat flow across border
-    double q;
+    double q[2];
 
 } border_t;
 
