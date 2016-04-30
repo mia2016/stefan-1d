@@ -109,15 +109,19 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
     //double * bords = p->borders; 
     //double * b     = p->beta;
 
+    constants konst = get_constants();
+    
     // Precalculate some constants needed later
     double k[] = {
         p->beta / (p->materials[0].rho * p->materials[1].L),
         - 1.0 / (p->materials[1].rho * p->materials[1].L),
-        em_s*sigma,
-        0.0296*pow(clength/v_luft, 4.0/3.0)*pow(v_luft/k_luft, 1.0/3.0)*clength*(1.0/k_luft),
-        xi*ls/R
+        konst.em_s*konst.sigma,
+        0.0296*pow(konst.clength/konst.v_luft, 4.0/3.0)
+            *pow(konst.v_luft/konst.k_luft, 1.0/3.0)*konst.clength*(1.0/konst.k_luft),
+        konst.xi*konst.ls/konst.R
     };
-    
+
+        
     /* Heat fluxes [W/m²]
      * p->borders[0].q[1] = q_betong/is (Constant)
      * p->borders[1].q[0] = q_snø/is+qfrys
@@ -125,7 +129,7 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
      * p->borders[2].q[0] = q_overflate
      */
 
-    p->borders[0].q[1] = q_bs;
+    p->borders[0].q[1] = konst.q_bs;
     
     double q[] = {
         0.0,    // q_sens
@@ -137,19 +141,9 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         0.0     // q_snø/is
     };
 
-    // Variables dependant on weather
-    double h_ls,  // h_luft/snø (Convective heat transfer)
-        e_l,  // e_luft (Vapor pressure)
-        C,  // Skydekket 1-10 [] (Værdata)
-        wind_speed, // Wind speed [m/s] (Værdata)
-        y,  // Relaterer partialtrykket til vann i luften til lufttemperaturen
-        Rf, // Relative humidity in air (Værdata)
-        q_sol   = 27.3;  // February [W/m²] 
-        //q_sol   = 78.23; // March [W/m²]
-
     // Borders
-    int p_border = p->borders[1].position-(int)p->borders[1].position;
-
+    unsigned p_border = p->borders[1].position-(int)p->borders[1].position;
+    unsigned v_border = p->borders[2].position-(int)p->borders[2].position;
 
     // Main loop
 	printf("Starting...\n");
@@ -162,20 +156,20 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         }
 
         // TODO: Update variables dependant on weather 
-        C = 0.0;
-        wind_speed = 0.0;
-        y = 0.0;
-        Rf = 0.0;
+        konst.cover         = 0.0;
+        konst.windspeed     = 0.0;
+        konst.Rf            = 0.0;
+        konst.q_sol         = 27.3;  // February [W/m²] 
 
 
-        e_l = 0.611*Rf*exp(k[4]*(1.0/273.15-1.0/p->borders[2].u[1]));
-        h_ls = k[3]*pow(wind_speed, 4.0/3.0);
+        konst.e_l     = 0.611*konst.Rf*exp(k[4]*(1.0/273.15-1.0/p->borders[2].u[1]));
+        konst.h_ls    = k[3]*pow(konst.windspeed, 4.0/3.0);
 
         // Heat fluxes
-        q[0] = h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
-        q[1] = (1.0/y)*h_ls*(e_o-e_l);
-        q[2] = (1-albedo)*q_sol;
-        q[3] = k[2]*(0.642*e_l*(1+0.22*C*C)
+        q[0] = konst.h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
+        q[1] = (1.0/konst.y)*konst.h_ls*(konst.e_o-konst.e_l);
+        q[2] = (1-konst.albedo)*konst.q_sol;
+        q[3] = k[2]*(0.642*konst.e_l*(1+0.22*konst.cover*konst.cover)
                 *pow(p->borders[2].u[1], 3.0)-pow(p->borders[2].u[0], 4.0));
         q[4] = q[0]+q[1]+q[2]+q[3];
 
