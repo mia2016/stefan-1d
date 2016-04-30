@@ -60,24 +60,64 @@ void problem_iterate(problem_t * p, double untilTime) {
 
     // Copy values from struct (for cleaner code)
     //double * temps = p->temperatures;
+    //double * mats  = p->materials;
+    //double * bords = p->borders; 
+    //double * b     = p->beta;
 
     double dt = p->dt;
 	double t;
+
+    /* Heat fluxes [W/m²]
+     * p->borders[0].q = q_betong/is (Constant)
+     * p->borders[1].q = q_snø/is
+     * p->borders[2].q = q_overflate
+     * 
+     * TODO: q_frys on borders[1], but only on ice side
+     */
+    double q_sens, q_lat, q_kort, q_lang;
+        
+    p->borders[0].q = -115.0;
+    
+    // TODO: Should these be struct variables?
+    double h_ls = 0.0;  // h_luft/snø (Convective heat transfer) 
+    double y    = 0.0;  // γ            
+    double e_o  = 0.0;  // e_overflate (Vapor pressure)
+    double e_l  = 0.0;  // e_luft (Vapor pressure)
+    double emm_s= 0.0;  // e_snø (Emissivity)
+    double emm_a= 0.0;  // e_atmosfære (Emissivity)
+    double C    = 0.0;  // Skydekket 1-10
+    double sigma= 0.0;  // Stefan-Boltzmann constant //TODO: Should be defined as constant
+    double v_luft=0.0;  // Kinematisk viskositet
 
     // Main loop
 	printf("Starting...\n");
 	for (t = p->time; t <= untilTime; t += dt) {
 		printf("\r\33[2KProgress: %.2lf%%", 100 * (t - p->time) / (untilTime - p->time));
 
+        
+        // Heat fluxes
+        // q_snø/is (TODO: Numerator should be: (u_1snø-u_nis)
+        p->borders[1].q = 1.0/(p->borders[1].position/p->materials[0].kappa
+                +(1-p->borders[1].position/p->materials[0].kappa));
 
-		//TODO: Calculate heat fluxes
+		//q_overflate (TODO: Calculate parts separately for cleaner code?)
+        q_sens = h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
+        q_lat = (1/y)*h_ls*(e_o-e_l);
+        q_kort = 0.0;
+        q_lang = emm_s*sigma*(emm_a*(1+0.22*C*C))*(pow(p->borders[2].u[1], 4)-pow(p->borders[2].u[0], 4)); 
+        p->borders[2].q = q_sens+q_lat+q_kort+q_lang;
 
-
-		//TODO: Calculate boundary movements
-		double ds[] = {
-			0.0,
-			0.0
-		};
+		//Calculate boundary movements
+		double ds[2];
+        
+        if (p->borders[3].u[0] >= 0.0){    // If temperature of snow at air/snow interface is >= 0
+            ds[1] = -p->borders[2].q/(p->materials[1].rho*p->materials[1].L);
+        }
+        else{
+            ds[1] = 0.0;
+        }
+    
+	    ds[0] = -p->beta*p->materials[0].rho/p->materials[1].rho*ds[1];
 
 
 		// Update each phase
