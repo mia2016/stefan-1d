@@ -137,13 +137,12 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         0.0     // q_snø/is
     };
 
-
     // Variables dependant on weather
     double h_ls,  // h_luft/snø (Convective heat transfer)
         e_l,  // e_luft (Vapor pressure)
         C,  // Skydekket 1-10 [] (Værdata)
         wind_speed, // Wind speed [m/s] (Værdata)
-        y,  // Konstant som relaterer partialtrykket til vann i luften til lufttemperaturen
+        y,  // Relaterer partialtrykket til vann i luften til lufttemperaturen
         Rf, // Relative humidity in air (Værdata)
         q_sol   = 27.3;  // February [W/m²] 
         //q_sol   = 78.23; // March [W/m²]
@@ -163,11 +162,16 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         }
 
         // TODO: Update variables dependant on weather 
+        C = 0.0;
+        wind_speed = 0.0;
+        y = 0.0;
+        Rf = 0.0;
 
-        // Heat fluxes
+
         e_l = 0.611*Rf*exp(k[4]*(1.0/273.15-1.0/p->borders[2].u[1]));
         h_ls = k[3]*pow(wind_speed, 4.0/3.0);
 
+        // Heat fluxes
         q[0] = h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
         q[1] = (1.0/y)*h_ls*(e_o-e_l);
         q[2] = (1-albedo)*q_sol;
@@ -182,7 +186,7 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
             q[5] = 0.0;  
         }
         
-        q[6] = (p->temperatures[p_border+1]-p->temperatures[p_borders])
+        q[6] = (p->temperatures[p_border+1]-p->temperatures[p_border])
             /(p_border/p->materials[0].kappa+(1.0-p_border/p->materials[0].kappa));
 
         p->borders[1].q[0] = q[5]+q[6]; // q_snø/is+q_frys
