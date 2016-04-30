@@ -1,3 +1,4 @@
+#pragma once
 typedef struct{
     // Non reduced grid size
     double dt, dx;
