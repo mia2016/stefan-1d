@@ -70,7 +70,7 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
     // ---- Interior -----
 	while (i < end) {
 
-		du = alpha * (u[i - 1] - 2.0 * u[i] + u[i + 1]);
+		du = alpha * (prev_u - 2.0 * u[i] + u[i + 1]);
 
 		// Update u
 		prev_u = u[i];

@@ -1,23 +1,10 @@
 #include <tinytest/tinytest.h>
 #include "../src/interpolate.c"
+#include "compare.h"
 
 /**
  * Tests the interpolation module.
  */
-
-
-/**
- * Small utility function for comparing doubles.
- *
- * @param a First double
- * @param b Other double
- * @return True if a is approximately equal to b
- */
-#define SMALL_VALUE 0.0001
-
-char double_equal(double a, double b) {
-	return a < b + SMALL_VALUE && a > b - SMALL_VALUE;
-}
 
 
 void test_interpolate_value() {
