@@ -124,7 +124,7 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
 
 
         //TODO: Fix this
-        if (p->borders[2].q < 0) {
+        if (p->borders[2].q[0] < 0) {
             error_warning("Energy flowing from snow to air not modelled");
         }
 
@@ -134,11 +134,11 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         if (p->borders[2].u[0] >= 0.0) {
 
             // Melt some snow
-            ds[0] = k[0] * p->borders[2].q;
-            ds[1] = (k[0] + k[1]) * p->borders[2].q;
+            ds[0] = k[0] * p->borders[2].q[0];
+            ds[1] = (k[0] + k[1]) * p->borders[2].q[0];
 
             // Don't count this heat later
-            p->borders[2].q = 0;
+            p->borders[2].q[0] = 0;
         }
 
 
