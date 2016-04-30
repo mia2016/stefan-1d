@@ -1,9 +1,18 @@
+
 #include <tinytest/tinytest.h>
 #include "../src/problem.c"
 
 /**
  * Tests the problem module.
  */
+
+
+// MOCK FUNCTIONS
+void error_fatal(char * m) {};
+void error_warning(char * m) {};
+void phase_update(border_t * a, border_t * b, double * u, material_t * material) {};
+
+#include "../src/interpolate.c"
 
 
 /**
@@ -20,47 +29,57 @@ char double_equal(double a, double b) {
 }
 
 
-void test_interpolate_value() {
 
-	// Linear interpolation
-	point_t
-		a = {0.0, 0.0},
-		b = {1.0, 1.0},
-		c = {2.0, 2.0},
-		d = {2.0, 0.0};
+void test_move_border() {
 
-	double r[4];
-	for (unsigned i = 0; i < 4; i++) {
-		r[i] = interpolate_value(a, b, c, i);
-	}
+    problem_t p;
+    p.resolution = 10;
+    p.temperatures = malloc(sizeof(double) * p.resolution);
 
-	ASSERT(
-		"Should handle linear interpolation one step ahead",
-		double_equal(r[3], 3.0)
-	);
+    for (unsigned i = 0; i < p.resolution; i++) {
+        p.temperatures[i] = i;
+    }
 
-	ASSERT(
-		"Given points should return their values",
-		double_equal(r[0], a.y) &&
-		double_equal(r[1], b.y) &&
-		double_equal(r[2], c.y)
-	);
+    p.borders[1].position = 5.4;
+    p.borders[1].u[0] = 7.0;
 
-	ASSERT(
-		"Should do second order interpolation",
-		double_equal(
-			interpolate_value(a, b, d, 3.0),
-			-3.0
-		)
-	);
+    // Move border sligtly
+    move_border(&p, 1, 0.1);
 
+    ASSERT(
+        "Nearby temperatures should be unchanged",
+        double_equal(p.temperatures[5], 5.0) &&
+        double_equal(p.temperatures[6], 6.0)
+    );
+
+    ASSERT(
+        "Border position should have been updated",
+        double_equal(p.borders[1].position, 5.5)
+    );
+
+    // Move border on top of point
+    move_border(&p, 1, 0.5);
+
+    ASSERT(
+        "Value of point should have been interpolated",
+        double_equal(p.borders[1].u[0], p.temperatures[6])
+    );
+
+
+    // Move border across next point
+    move_border(&p, 1, 0.5);
+    move_border(&p, 1, 0.7);
+
+    ASSERT(
+        "Correct value interpolated",
+        double_equal(p.temperatures[7], 79.0/11.0)
+    );
 }
 
 
 int main(int argc, char ** argv) {
 
-	RUN(test_interpolate_value);
+	RUN(test_move_border);
 
 	return TEST_REPORT();
 }
-

@@ -5,7 +5,52 @@
 #include "problem.h"
 #include "error.h"
 #include "interpolate.h"
+#include "constants.h"
 
+
+/**
+ * Moves a border and migrates points across phases if necessary.
+ *
+ * @param p Problem containing border to move
+ * @param i Index of border to move (in problem)
+ * @param distance Distance to move border (can be negative)
+ */
+void move_border(problem_t * p, unsigned i, double distance) {
+
+    // We assume a border never crosses more than a single point
+    if (abs(distance) >= 1.0) {
+        error_fatal("A border is moving too fast.");
+    }
+
+    unsigned bp = p->borders[i].position;
+    double next_position = p->borders[i].position + distance;
+    unsigned movement = (unsigned) next_position - bp;
+
+    // Move point between phases?
+    if (movement > 0) {
+
+        // New point in phase i
+        p->temperatures[bp + 1] = interpolate_value(
+                (point_t) {bp - 1, p->temperatures[bp - 1]},
+                (point_t) {bp, p->temperatures[bp]},
+                (point_t) {next_position, p->borders[i].u[0]},
+                bp + 1
+            );
+
+    } else if (movement < 0) {
+
+        // Lost point in phase i - it ends up in i+1
+        p->temperatures[bp] = interpolate_value(
+                (point_t) {bp + 2, p->temperatures[bp + 2]},
+                (point_t) {bp + 1, p->temperatures[bp + 1]},
+                (point_t) {next_position, p->borders[i].u[1]},
+                bp
+            );
+
+    }
+
+    p->borders[i].position = next_position;
+}
 
 
 problem_t problem_create(unsigned resolution, double temperature) {
@@ -56,7 +101,7 @@ void problem_print(problem_t * problem) {
 }
 
 
-void problem_iterate(problem_t * p, double untilTime) {
+void problem_iterate(problem_t * p, unsigned untilTime) {
 
     // Copy values from struct (for cleaner code)
     //double * temps = p->temperatures;
@@ -64,61 +109,104 @@ void problem_iterate(problem_t * p, double untilTime) {
     //double * bords = p->borders; 
     //double * b     = p->beta;
 
-    double dt = p->dt;
-	double t;
-
-    /* Heat fluxes [W/m²]
-     * p->borders[0].q = q_betong/is (Constant)
-     * p->borders[1].q = q_snø/is
-     * p->borders[2].q = q_overflate
-     * 
-     * TODO: q_frys on borders[1], but only on ice side
-     */
-    double q_sens, q_lat, q_kort, q_lang;
-        
-    p->borders[0].q = -115.0;
+    // Precalculate some constants needed later
+    double k[] = {
+        p->beta / (p->materials[0].rho * p->materials[1].L),
+        - 1.0 / (p->materials[1].rho * p->materials[1].L),
+        em_s*sigma,
+        0.0296*pow(clength/v_luft, 4.0/3.0)*pow(v_luft/k_luft, 1.0/3.0)*clength*(1.0/k_luft),
+        xi*ls/R
+    };
     
-    // TODO: Should these be struct variables?
-    double h_ls = 0.0;  // h_luft/snø (Convective heat transfer) 
-    double y    = 0.0;  // γ            
-    double e_o  = 0.0;  // e_overflate (Vapor pressure)
-    double e_l  = 0.0;  // e_luft (Vapor pressure)
-    double emm_s= 0.0;  // e_snø (Emissivity)
-    double emm_a= 0.0;  // e_atmosfære (Emissivity)
-    double C    = 0.0;  // Skydekket 1-10
-    double sigma= 0.0;  // Stefan-Boltzmann constant //TODO: Should be defined as constant
-    double v_luft=0.0;  // Kinematisk viskositet
+    /* Heat fluxes [W/m²]
+     * p->borders[0].q[1] = q_betong/is (Constant)
+     * p->borders[1].q[0] = q_snø/is+qfrys
+     * p->borders[1].q[1] = q_snø/is
+     * p->borders[2].q[0] = q_overflate
+     */
+
+    p->borders[0].q[1] = q_bs;
+    
+    double q[] = {
+        0.0,    // q_sens
+        0.0,    // q_lat
+        0.0,    // q_kort
+        0.0,    // q_lang
+        0.0,    // q_overflate
+        0.0,    // q_frys
+        0.0     // q_snø/is
+    };
+
+
+    // Variables dependant on weather
+    double h_ls,  // h_luft/snø (Convective heat transfer)
+        e_l,  // e_luft (Vapor pressure)
+        C,  // Skydekket 1-10 [] (Værdata)
+        wind_speed, // Wind speed [m/s] (Værdata)
+        y,  // Konstant som relaterer partialtrykket til vann i luften til lufttemperaturen
+        Rf, // Relative humidity in air (Værdata)
+        q_sol   = 27.3;  // February [W/m²] 
+        //q_sol   = 78.23; // March [W/m²]
+
+    // Borders
+    int p_border = p->borders[1].position-(int)p->borders[1].position;
+
 
     // Main loop
 	printf("Starting...\n");
-	for (t = p->time; t <= untilTime; t += dt) {
-		printf("\r\33[2KProgress: %.2lf%%", 100 * (t - p->time) / (untilTime - p->time));
+	while (p->time <= untilTime) {
 
-        
+        // Update progress in command line interface
+        if (p->time % 10000 == 0) {
+            printf("\r\33[2KProgress: %.2f%%", 100 * (float) p->time / untilTime);
+            fflush(stdout);
+        }
+
+        // TODO: Update variables dependant on weather 
+
         // Heat fluxes
-        // q_snø/is (TODO: Numerator should be: (u_1snø-u_nis)
-        p->borders[1].q = 1.0/(p->borders[1].position/p->materials[0].kappa
-                +(1-p->borders[1].position/p->materials[0].kappa));
+        e_l = 0.611*Rf*exp(k[4]*(1.0/273.15-1.0/p->borders[2].u[1]));
+        h_ls = k[3]*pow(wind_speed, 4.0/3.0);
 
-		//q_overflate (TODO: Calculate parts separately for cleaner code?)
-        q_sens = h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
-        q_lat = (1/y)*h_ls*(e_o-e_l);
-        q_kort = 0.0;
-        q_lang = emm_s*sigma*(emm_a*(1+0.22*C*C))*(pow(p->borders[2].u[1], 4)-pow(p->borders[2].u[0], 4)); 
-        p->borders[2].q = q_sens+q_lat+q_kort+q_lang;
+        q[0] = h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
+        q[1] = (1.0/y)*h_ls*(e_o-e_l);
+        q[2] = (1-albedo)*q_sol;
+        q[3] = k[2]*(0.642*e_l*(1+0.22*C*C)
+                *pow(p->borders[2].u[1], 3.0)-pow(p->borders[2].u[0], 4.0));
+        q[4] = q[0]+q[1]+q[2]+q[3];
 
-		//Calculate boundary movements
-		double ds[2];
-        
-        if (p->borders[3].u[0] >= 0.0){    // If temperature of snow at air/snow interface is >= 0
-            ds[1] = -p->borders[2].q/(p->materials[1].rho*p->materials[1].L);
+        if (p->borders[2].u[1] >= 273.15){
+            q[5] = -p->beta*(p->borders[2].q[0]);
         }
         else{
-            ds[1] = 0.0;
+            q[5] = 0.0;  
         }
-    
-	    ds[0] = -p->beta*p->materials[0].rho/p->materials[1].rho*ds[1];
+        
+        q[6] = (p->temperatures[p_border+1]-p->temperatures[p_borders])
+            /(p_border/p->materials[0].kappa+(1.0-p_border/p->materials[0].kappa));
 
+        p->borders[1].q[0] = q[5]+q[6]; // q_snø/is+q_frys
+        p->borders[1].q[1] = q[6];      // q_snø/is
+        p->borders[2].q[0] = q[4];      // q_overflate
+
+
+        //TODO: Fix this
+        if (p->borders[2].q < 0) {
+            error_warning("Energy flowing from snow to air not modelled");
+        }
+
+		// Calculate boundary movements
+		double ds[2] = {0};
+
+        if (p->borders[2].u[0] >= 0.0) {
+
+            // Melt some snow
+            ds[0] = k[0] * p->borders[2].q;
+            ds[1] = (k[0] + k[1]) * p->borders[2].q;
+
+            // Don't count this heat later
+            p->borders[2].q = 0;
+        }
 
 		// Update each phase
 		for (unsigned i = 0; i < 2; i++) {
@@ -132,38 +220,12 @@ void problem_iterate(problem_t * p, double untilTime) {
 
 
 		// Update boundaries (including checking for points crossing it)
-		for (unsigned i = 1; i < 3; i++) {
-
-			// We assume a border never crosses more than a single point
-			if (ds[i] >= 1.0) {
-				error_fatal("A border is moving too fast.");
-			}
-
-			double next_s = p->borders[i].position + ds[i - 1];
-			unsigned movement = (unsigned) next_s - (unsigned) p->borders[i].position;
-
-			// Move point between phases
-			if (movement > 0) {
-
-				// New point in phase i
-				p->temperatures[(unsigned) p->borders[i].position] = 0.0; //TODO: Interpolation using above method
-
-			} else if (movement < 0) {
-
-				// Lost point in phase i - it ends up in i+1
-				p->temperatures[(unsigned) p->borders[i].position] = 0.0; //TODO: Interpolation
-
-			}
-
-			p->borders[i].position = next_s;
-		}
+        move_border(p, 1, ds[0]);
+        move_border(p, 2, ds[1]);
 
 
+        p->time++;
     }
-
-    // Update problem
-    p->time = t;
-    p->dt = dt;
 
 	printf("\r\33[2KDone\n\n");
 

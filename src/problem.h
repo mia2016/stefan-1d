@@ -5,6 +5,12 @@
 
 /**
  * Represents the state of a stefan problem with 2 moving boundaries.
+ *
+ * The domain is devided roughly like this:
+ *
+ *  borders[1]           borders[2]            borders[3]
+ *     |------ Phase 1 ------|------ Phase 2 ------|
+ *
  */
 typedef struct {
 
@@ -13,8 +19,7 @@ typedef struct {
     double * temperatures;
 
     // Current time and timestep
-    double time;
-    double dt;
+    unsigned time;
 
     // Current boundaries
 	border_t borders[3];
@@ -59,4 +64,4 @@ void problem_print(problem_t * problem);
  * @param problem Problem to iterate
  * @param untilTime Simulation time at which to stop the iteration
  */
-void problem_iterate(problem_t * problem, double untilTime);
+void problem_iterate(problem_t * problem, unsigned untilTime);
