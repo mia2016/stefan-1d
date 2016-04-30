@@ -16,7 +16,7 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
              end = b->position;
 
     double
-        a_f = 1.0 - (a->position - i),
+        a_f = 1.0 - (a->position - (unsigned) a->position),
         b_f = b->position - end;
 
 
@@ -42,8 +42,8 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
     prev_u = a->u[1];
     a->u[1] += alpha * (
             a_f * a->q[1] / kappa +
-            2 * a->u[1] +
-            2 * u[i]
+            -2.0 * a->u[1] +
+            2.0 * u[i]
         ) / (a_f * a_f);
 
     if (a_f >= 1.0) {
@@ -85,9 +85,9 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
     // Interpolate for near-border point
     du = alpha * interpolate_sd(
             b_f,
-            prev_u,
+            b->u[0],
             u[i],
-            b->u[0]
+            prev_u
         );
 
     prev_u = u[i];
@@ -95,8 +95,8 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
 
     // Update border value
     b->u[0] += alpha * (
-            2 * prev_u +
-            2 * b->u[0] +
+            2.0 * prev_u +
+            -2.0 * b->u[0] +
             b_f * (- b->q[0]) / kappa
         ) / (b_f * b_f);
 
