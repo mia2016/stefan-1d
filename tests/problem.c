@@ -1,6 +1,7 @@
-
 #include <tinytest/tinytest.h>
 #include "../src/problem.c"
+#include "compare.h"
+
 
 /**
  * Tests the problem module.
@@ -11,23 +12,7 @@
 void error_fatal(char * m) {};
 void error_warning(char * m) {};
 void phase_update(border_t * a, border_t * b, double * u, material_t * material) {};
-
 #include "../src/interpolate.c"
-
-
-/**
- * Small utility function for comparing doubles.
- *
- * @param a First double
- * @param b Other double
- * @return True if a is approximately equal to b
- */
-#define SMALL_VALUE 0.0001
-
-char double_equal(double a, double b) {
-	return a < b + SMALL_VALUE && a > b - SMALL_VALUE;
-}
-
 
 
 void test_move_border() {
