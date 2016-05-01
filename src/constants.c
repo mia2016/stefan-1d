@@ -6,9 +6,9 @@ constants get_constants(){
     constants a;
     
     // Constants in SI units (Not reduced)
-    double dt           = 0.01;                          // Grid size [s]
-    double dx           = 10.0;                          // Grid size [m]
-    unsigned dump_rate  = 5000;
+    double dt           = 0.0001;                          // Grid size [s]
+    double dx           = 0.1;                          // Grid size [m]
+    unsigned dump_rate  = 1000000;
 
     double q_bi     = -115.0;                       // kjøling fra betong [W/m²]
     double e_o      = 0.611;                        // e_overflate (Vapor pressure) [kPa]

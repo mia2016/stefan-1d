@@ -86,9 +86,56 @@ void problem_destroy(problem_t * problem) {
 }
 
 void problem_print_header(problem_t * problem){
-    FILE * log_file, * flux_file;
+    FILE * log_file, * flux_file, * temp_file;
     log_file  = fopen("log.out", "w");
     flux_file = fopen("flux.out", "w");
+    temp_file = fopen("temp.out", "w");
+    
+
+    constants konst = get_constants();
+
+    // Printing system variables
+    fprintf(log_file, "Stefan 1D solver\n\n");
+    fprintf(log_file, "dt\t\t%f\n", konst.dt);
+    fprintf(log_file, "dx\t\t%f\n", konst.dx);
+    fprintf(log_file, "Beta\t\t%.2f\n", problem->beta);
+    fprintf(log_file, "Resolution\t%u\n", problem->resolution);
+    fprintf(log_file, "\n");
+    fprintf(log_file, "Ice properties\n");
+    fprintf(log_file, "\tThermal diffusivity\t%.15f\t%.15f\n", 
+            problem->materials[0].alpha, problem->materials[0].alpha*pow(konst.dx, 2.0)/konst.dt);
+    fprintf(log_file, "\tDensity\t\t\t%.15f\t%.15f\n", 
+            problem->materials[0].rho, problem->materials[0].rho/pow(konst.dx, 3.0));
+    fprintf(log_file, "\tLatent heat\t\t%.15f\t%.15f\n", 
+            problem->materials[0].L, problem->materials[0].L*pow(konst.dx, 2.0)/pow(konst.dt, 2.0));
+    fprintf(log_file, "\tThermal conductivity\t%.15f\t%.15f\n", 
+            problem->materials[0].kappa, problem->materials[0].kappa*konst.dx/pow(konst.dt, 3.0));
+    fprintf(log_file, "\n");
+    fprintf(log_file, "Snow properties\n");
+    fprintf(log_file, "\tThermal diffusivity\t%.15f\t%.15f\n", 
+            problem->materials[1].alpha, problem->materials[1].alpha*pow(konst.dx, 2.0)/konst.dt);
+    fprintf(log_file, "\tDensity\t\t\t%.15f\t%.15f\n", 
+            problem->materials[1].rho, problem->materials[1].rho/pow(konst.dx, 3.0));
+    fprintf(log_file, "\tLatent heat\t\t%.15f\t%.15f\n", 
+            problem->materials[1].L, problem->materials[1].L*pow(konst.dx, 2.0)/pow(konst.dt, 2.0));
+    fprintf(log_file, "\tThermal conductivity\t%.15f\t%.15f\n", 
+            problem->materials[1].kappa, problem->materials[1].kappa*konst.dx/pow(konst.dt, 3.0));
+    fprintf(log_file, "\n");
+    fprintf(log_file, "System constants\n");
+    fprintf(log_file, "\tq_betong/is\t%f\n", konst.q_bi);
+    fprintf(log_file, "\te_overflate\t%f\n", konst.e_o);
+    fprintf(log_file, "\tepsilon_snø\t%f\n", konst.em_s);
+    fprintf(log_file, "\tsigma\t\t%f\n", konst.sigma);
+    fprintf(log_file, "\tv_luft\t\t%f\n", konst.v_luft);
+    fprintf(log_file, "\ta\t\t%f\n", konst.albedo);
+    fprintf(log_file, "\tL\t\t%f\n", konst.clength);
+    fprintf(log_file, "\tL_s\t\t%f\n", konst.ls);
+    fprintf(log_file, "\tR\t\t%f\n", konst.R);
+    fprintf(log_file, "\txi\t\t%f\n", konst.xi);
+    fprintf(log_file, "\tgamma\t\t%f\n", konst.y);
+    fprintf(log_file, "\trho_l\t\t%f\n", konst.rho_l);
+    fprintf(log_file, "\tcp_luft\t\t%f\n", konst.cp_luft);
+    fprintf(log_file, "\n");
 
     // Log file header
     fprintf(log_file, "Time\t");
@@ -97,7 +144,7 @@ void problem_print_header(problem_t * problem){
                 "%u\t\t", 
                 i);
     }
-    fprintf(log_file, "s_1\t\t\t\t\t\ts_2\n");
+    fprintf(log_file, "0\t\t\t\t\t\ts_1\t\t\t\t\t\ts_2\n");
     
     // Flux file header
     fprintf(flux_file,
@@ -106,25 +153,35 @@ void problem_print_header(problem_t * problem){
     
     fclose(log_file);
     fclose(flux_file);
+    fclose(temp_file);
 }
 
 void problem_print(problem_t * problem) {
-    FILE * log_file, * flux_file;
+    FILE * log_file, * flux_file, * temp_file;
+    constants konst = get_constants();
     log_file  = fopen("log.out", "a");
     flux_file = fopen("flux.out", "a");
+    temp_file = fopen("temp.out", "a");
 
     // Printing temperaturs
-    fprintf(log_file, "%u\t", problem->time);
+    fprintf(log_file, "%.5f\t", problem->time*konst.dt);
     for (unsigned i = 0; i < problem->resolution; i++) {
         fprintf(
             log_file,
 			"%.6f\t",
 			problem->temperatures[i]
 		);
+        fprintf(
+            temp_file,
+            "%.6f\t",
+            problem->temperatures[i]
+            );
     }
+    fprintf(temp_file, "\n");
+
     // Border temperature and position
-    for (unsigned i = 0; i < 2; i++){
-        fprintf(log_file,"%f\t%f\t%f\t", 
+    for (unsigned i = 0; i < 3; i++){
+        fprintf(log_file,"%.1f\t%f\t%f\t", 
                 problem->borders[i].u[0], 
                 problem->borders[i].u[1], 
                 problem->borders[i].position
@@ -133,7 +190,7 @@ void problem_print(problem_t * problem) {
     fprintf(log_file, "\n");
     
     // Printing heat fluxes
-    fprintf(flux_file, "%u\t", problem->time);
+    fprintf(flux_file, "%f\t", problem->time*konst.dt);
     for (unsigned i = 0; i < 7; i++){
         fprintf(
             flux_file,
@@ -146,6 +203,7 @@ void problem_print(problem_t * problem) {
 
     fclose(log_file);
     fclose(flux_file);
+    fclose(temp_file);
 }
 
 
@@ -160,17 +218,18 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
     
     // Scaling material variables to reduced
     for (int i = 0; i < 2; i++){
-        p->materials[0].alpha   *= konst.dt/(konst.dx*konst.dx);
-        p->materials[0].L       *= konst.dt*konst.dt/(konst.dx*konst.dx);
-        p->materials[0].rho     *= pow(konst.dx, 3.0);
-        p->materials[0].kappa   *= pow(konst.dt, 3.0)/konst.dx;
-
+        p->materials[i].alpha   *= konst.dt/(konst.dx*konst.dx);
+        p->materials[i].L       *= konst.dt*konst.dt/(konst.dx*konst.dx);
+        p->materials[i].rho     *= pow(konst.dx, 3.0);
+        p->materials[i].kappa   *= pow(konst.dt, 3.0)/konst.dx;
     }
     
+    //problem_print_header(p);
+
     // Precalculate some constants needed later
     double k[] = {
-        p->beta / (p->materials[0].rho * p->materials[1].L),
-        - 1.0 / (p->materials[1].rho * p->materials[1].L),
+        -p->beta / (p->materials[0].rho * p->materials[1].L),
+        1.0 / (p->materials[1].rho * p->materials[1].L),
         konst.em_s*konst.sigma,
         0.0296*pow(konst.clength/konst.v_luft, 4.0/5.0)*pow(konst.v_luft*konst.rho_l*konst.cp_luft
                 /konst.k_luft, 1.0/3.0)*(konst.k_luft/konst.clength),
@@ -225,7 +284,7 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         p->q[6] = (p->temperatures[p_i+1]-p->temperatures[p_i])
             /(p_d/p->materials[0].kappa+(1.0-p_d/p->materials[1].kappa));
        
-        // Asinging heat fluxes
+        // Asigning heat fluxes
         p->borders[1].q[0] = -p->q[5]-p->q[6];  // q_snø/is+q_frys
         p->borders[1].q[1] = p->q[6];           // q_snø/is
         p->borders[2].q[0] = p->q[4];           // q_overflate
@@ -241,7 +300,7 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
 
             // Melt some snow
             ds[0] = k[0] * p->borders[2].q[0];
-            ds[1] = (k[0] + k[1]) * p->borders[2].q[0];
+            ds[1] = k[1] * p->borders[2].q[0];
 
             // Don't count this heat later
             p->borders[2].q[0] = 0;
