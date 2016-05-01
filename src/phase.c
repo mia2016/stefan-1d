@@ -19,7 +19,6 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
         a_f = 1.0 - (a->position - (unsigned) a->position),
         b_f = b->position - end;
 
-
     // Handle edge case
     if (a_f < SMALL_VALUE) {
         a_f += 1.0;
@@ -33,7 +32,7 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
 
     // Sanity check
     if (end - i < 1) {
-        error_fatal("Phase contains two few points");
+        error_fatal("Phase contains too few points");
     }
 
     // ----- Left border -----

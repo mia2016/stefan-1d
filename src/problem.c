@@ -83,67 +83,103 @@ void problem_destroy(problem_t * problem) {
 	free(problem->temperatures);
 }
 
+void problem_print_header(problem_t * problem){
+    FILE * log_file, * flux_file;
+    log_file  = fopen("log.out", "w");
+    flux_file = fopen("flux.out", "w");
+
+    // Log file header
+    fprintf(log_file, "Time\t");
+    for (unsigned i = 0; i < problem->resolution; i++){
+        fprintf(log_file, 
+                "%u\t\t", 
+                i);
+    }
+    fprintf(log_file, "s_1\t\t\t\t\t\ts_2\n");
+    
+    // Flux file header
+    fprintf(flux_file,
+            "Time\tq_sens\t\tq_lat\t\tq_kort\t\tq_lang\t\tq_overflate\tq_frys\t\tq_snø/is\tq_betong/is\n"
+            );
+    
+    fclose(log_file);
+    fclose(flux_file);
+}
 
 void problem_print(problem_t * problem) {
-	// Headers
-    printf("x, u\n");
+    FILE * log_file, * flux_file;
+    log_file  = fopen("log.out", "a");
+    flux_file = fopen("flux.out", "a");
 
-	// Values
+    // Printing temperaturs
+    fprintf(log_file, "%u\t", problem->time);
     for (unsigned i = 0; i < problem->resolution; i++) {
-        printf(
-			"%u, %f\n",
-			i,
+        fprintf(
+            log_file,
+			"%.6f\t",
 			problem->temperatures[i]
 		);
     }
+    // Border temperature and position
+    for (unsigned i = 0; i < 2; i++){
+        fprintf(log_file,"%f\t%f\t%f\t", 
+                problem->borders[i].u[0], 
+                problem->borders[i].u[1], 
+                problem->borders[i].position
+               );
+    }
+    fprintf(log_file, "\n");
+    
+    // Printing heat fluxes
+    fprintf(flux_file, "%u\t", problem->time);
+    for (unsigned i = 0; i < 7; i++){
+        fprintf(
+            flux_file,
+            "%.6f\t",
+            problem->q[i]
+        );
+    }
+    fprintf(flux_file, "%.6f", problem->borders[0].q[1]);
+    fprintf(flux_file, "\n");
 
-	//TODO: Print boundaries
+    fclose(log_file);
+    fclose(flux_file);
 }
 
 
 void problem_iterate(problem_t * p, unsigned untilTime) {
-
-    // Copy values from struct (for cleaner code)
-    //double * temps = p->temperatures;
-    //double * mats  = p->materials;
-    //double * bords = p->borders; 
-    //double * b     = p->beta;
-
     constants konst = get_constants();
+
+    // Checking stability
+    for (int i = 0; i < 2; i++){
+        if (p->materials[i].alpha*konst.dt/(konst.dx*konst.dx) > 0.5)
+            error_warning("Stability criteria not met.");
+    }
+    
+    // Scaling material variables to reduced
+    for (int i = 0; i < 2; i++){
+        p->materials[0].alpha   *= konst.dt/(konst.dx*konst.dx);
+        p->materials[0].L       *= konst.dt*konst.dt/(konst.dx*konst.dx);
+        p->materials[0].rho     *= pow(konst.dx, 3.0);
+        p->materials[0].kappa   *= pow(konst.dt, 3.0)/konst.dx;
+
+    }
     
     // Precalculate some constants needed later
     double k[] = {
         p->beta / (p->materials[0].rho * p->materials[1].L),
         - 1.0 / (p->materials[1].rho * p->materials[1].L),
         konst.em_s*konst.sigma,
-        0.0296*pow(konst.clength/konst.v_luft, 4.0/3.0)
-            *pow(konst.v_luft/konst.k_luft, 1.0/3.0)*konst.clength*(1.0/konst.k_luft),
+        0.0296*pow(konst.clength/konst.v_luft, 4.0/5.0)*pow(konst.v_luft*konst.rho_l*konst.cp_luft
+                /konst.k_luft, 1.0/3.0)*(konst.k_luft/konst.clength),
         konst.xi*konst.ls/konst.R
     };
 
-        
-    /* Heat fluxes [W/m²]
-     * p->borders[0].q[1] = q_betong/is (Constant)
-     * p->borders[1].q[0] = q_snø/is+qfrys
-     * p->borders[1].q[1] = q_snø/is
-     * p->borders[2].q[0] = q_overflate
-     */
+    p->borders[0].q[1] = konst.q_bi;
 
-    p->borders[0].q[1] = konst.q_bs;
-    
-    double q[] = {
-        0.0,    // q_sens
-        0.0,    // q_lat
-        0.0,    // q_kort
-        0.0,    // q_lang
-        0.0,    // q_overflate
-        0.0,    // q_frys
-        0.0     // q_snø/is
-    };
-
-    // Borders
-    unsigned p_border = p->borders[1].position-(int)p->borders[1].position;
-    unsigned v_border = p->borders[2].position-(int)p->borders[2].position;
+    // Border positions
+    int p_i     = (int)p->borders[1].position;
+    double p_d  = p->borders[1].position-(int)p->borders[1].position;
 
     // Main loop
 	printf("Starting...\n");
@@ -156,47 +192,50 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         }
 
         // TODO: Update variables dependant on weather 
-        konst.cover         = 0.0;
-        konst.windspeed     = 0.0;
-        konst.Rf            = 0.0;
-        konst.q_sol         = 27.3;  // February [W/m²] 
+        konst.cover         = 1.0;                          // Cloud cover
+        konst.windspeed     = 1.0*konst.dt/konst.dx;        // Wind speed
+        konst.Rf            = 0.6;                          // Relative humidity
+        konst.q_sol         = -27.3*pow(konst.dt, 3.0);     // February [W/m²] 
+        p->borders[2].u[1]  = 278.15;                       // Air temperature
+    
+        // Calculate variables needed in heat flux calculation
+        konst.e_l     = 0.611*konst.Rf*
+            exp(k[4]*(1.0/p->borders[2].u[0]-1.0/p->borders[2].u[1]))*konst.dx*pow(konst.dt, 2.0);
+        konst.h_ls    = k[3]*pow(konst.windspeed, 4.0/5.0);
 
+        // Heat flux calculation
+        p->q[0] = konst.h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
+        p->q[1] = (1.0/konst.y)*konst.h_ls*(konst.e_l-konst.e_o);
+        p->q[2] = (1-konst.albedo)*konst.q_sol;
+        p->q[3] = k[2]*(0.642*konst.e_l*pow(p->borders[2].u[1], 3.0)-pow(p->borders[2].u[0], 4.0));
+        p->q[4] = 0.0;
+        for (unsigned i = 0; i < 4; i++){
+            p->q[4] += p->q[i];
+        }
 
-        konst.e_l     = 0.611*konst.Rf*exp(k[4]*(1.0/273.15-1.0/p->borders[2].u[1]));
-        konst.h_ls    = k[3]*pow(konst.windspeed, 4.0/3.0);
-
-        // Heat fluxes
-        q[0] = konst.h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
-        q[1] = (1.0/konst.y)*konst.h_ls*(konst.e_o-konst.e_l);
-        q[2] = (1-konst.albedo)*konst.q_sol;
-        q[3] = k[2]*(0.642*konst.e_l*(1+0.22*konst.cover*konst.cover)
-                *pow(p->borders[2].u[1], 3.0)-pow(p->borders[2].u[0], 4.0));
-        q[4] = q[0]+q[1]+q[2]+q[3];
-
-        if (p->borders[2].u[1] >= 273.15){
-            q[5] = -p->beta*(p->borders[2].q[0]);
+        if (p->borders[2].u[0] >= 273.15){
+            p->q[5] = -p->beta*(p->q[4]);
         }
         else{
-            q[5] = 0.0;  
+            p->q[5] = 0.0;  
         }
         
-        q[6] = (p->temperatures[p_border+1]-p->temperatures[p_border])
-            /(p_border/p->materials[0].kappa+(1.0-p_border/p->materials[0].kappa));
-
-        p->borders[1].q[0] = q[5]+q[6]; // q_snø/is+q_frys
-        p->borders[1].q[1] = q[6];      // q_snø/is
-        p->borders[2].q[0] = q[4];      // q_overflate
-
-
-        //TODO: Fix this
-        if (p->borders[2].q[0] < 0) {
+        p->q[6] = (p->temperatures[p_i+1]-p->temperatures[p_i])
+            /(p_d/p->materials[0].kappa+(1.0-p_d/p->materials[1].kappa));
+       
+        // Asinging heat fluxes
+        p->borders[1].q[0] = -p->q[5]-p->q[6];  // q_snø/is+q_frys
+        p->borders[1].q[1] = p->q[6];           // q_snø/is
+        p->borders[2].q[0] = p->q[4];           // q_overflate
+        
+        if (p->borders[2].q[0] > 0) {
             error_warning("Energy flowing from snow to air not modelled");
         }
 
-		// Calculate boundary movements
+        // Calculate boundary movements
 		double ds[2] = {0};
 
-        if (p->borders[2].u[0] >= 0.0) {
+        if (p->borders[2].u[0] >= 273.15) {
 
             // Melt some snow
             ds[0] = k[0] * p->borders[2].q[0];
@@ -223,8 +262,10 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
 
 
         p->time++;
+
+        // Print tempeatures
+        if (p->time%konst.dump_rate == 0)
+            problem_print(p);
     }
-
-	printf("\r\33[2KDone\n\n");
-
+    printf("\nDone!\n");
 }

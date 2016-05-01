@@ -17,7 +17,8 @@ typedef struct {
     // Array of temperatures (and its length)
     unsigned resolution;
     double * temperatures;
-    
+    double q[7];
+
     // Current time and timestep
     unsigned time;
 
@@ -50,6 +51,12 @@ problem_t problem_create(unsigned resolution, double temperature);
  */
 void problem_destroy(problem_t * problem);
 
+/**
+ * Print header for log and flux files
+ *
+ * @param problem Problem to print
+ */
+void problem_print_header(problem_t * problem);
 
 /**
  * Prints the temperatures as a function of the position x.

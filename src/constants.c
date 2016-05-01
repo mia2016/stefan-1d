@@ -4,12 +4,13 @@
 
 constants get_constants(){
     constants a;
-
+    
     // Constants in SI units (Not reduced)
-    double dt       = 1.0;                          // Grid size [s]
-    double dx       = 1.0;                          // Grid size [m]
+    double dt           = 0.01;                          // Grid size [s]
+    double dx           = 10.0;                          // Grid size [m]
+    unsigned dump_rate  = 5000;
 
-    double q_bs     = -115.0;                       // kjøling fra betong [W/m²]
+    double q_bi     = -115.0;                       // kjøling fra betong [W/m²]
     double e_o      = 0.611;                        // e_overflate (Vapor pressure) [kPa]
     double em_s     = 0.96;                         // epsilon_snø (Emissivity)
     double sigma    = 5.67036713*pow(10.0, -8.0);   // Stefan-Boltzmann constant [W/m²K^4]
@@ -26,10 +27,11 @@ constants get_constants(){
     
     a.dt            = dt;
     a.dx            = dx;
+    a.dump_rate     = dump_rate;
 
     // Constants in reduced units
-    a.q_bs          = q_bs*pow(dt, 3.0);
-    a.e_o           = e_o;
+    a.q_bi          = q_bi*pow(dt, 3.0);
+    a.e_o           = e_o*dx*dt*dt;
     a.em_s          = em_s;
     a.sigma         = sigma*pow(dt, 3.0);
     a.v_luft        = v_luft*dt/(dx*dx);
@@ -39,9 +41,9 @@ constants get_constants(){
     a.ls            = ls*dt*dt/(dx*dx);
     a.R             = R*(dt*dt)/(dx*dx);
     a.xi            = xi;
-    a.y             = y*dx*dx;
+    a.y             = y*dx*dt*dt;
     a.rho_l         = rho_l*pow(dx, 3.0);
-    a.cp_luft       = cp_luft*dt/(dx*dx);
+    a.cp_luft       = cp_luft*(dt*dt)/(dx*dx);
 
     return a;
 }
