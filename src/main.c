@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "problem.h"
+#include "error.h"
 
 int main(int argv, char ** argc) {
 
@@ -26,9 +27,10 @@ int main(int argv, char ** argc) {
 
 	//TODO: Continue initialization
 
-	problem.borders[0].position = 0.4;
-	problem.borders[1].position = 5.5;
-	problem.borders[2].position = 7.5;
+	problem.borders[0].position = 2.0;
+	problem.borders[1].position = 10.0;
+	problem.borders[2].position = 20.0;
+	problem.borders[2].u[1] = 10.0;
 
 	problem.materials[0] = ice;
 	problem.materials[1] = snow;
@@ -36,8 +38,13 @@ int main(int argv, char ** argc) {
 
 	// Read and create dataset
 	FILE * datafile = fopen("data.txt", "r");
-	problem.dataset = dataset_read(datafile, 3);
-	fclose(datafile);
+	if (datafile == NULL) {
+		error_warning("Could not open input file. Using fake values.");
+		problem.dataset = dataset_create(3);
+	} else {
+		problem.dataset = dataset_read(datafile, 3);
+		fclose(datafile);
+	}
 
 
     problem_iterate(&problem, 100000);

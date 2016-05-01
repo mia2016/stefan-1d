@@ -41,3 +41,11 @@ double dataset_interpolate(dataset_t * dataset, unsigned column, double position
  * @return Dataset with data from file
  */
 dataset_t * dataset_read(FILE * stream, unsigned n_columns);
+
+/**
+ * Create a dataset with only one point for each column.
+ *
+ * @param n_columns Number of columns for the created dataset
+ * @return Dataset with given number of columns initialized to 0
+ */
+dataset_t * dataset_create(unsigned n_columns);

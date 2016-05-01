@@ -28,6 +28,24 @@ double dataset_interpolate(dataset_t * dataset, unsigned column, double position
         + weight * values[(unsigned) ceil(relative_position)];
 }
 
+
+dataset_t * dataset_create(unsigned n_columns) {
+
+	dataset_t * dataset = malloc(sizeof(dataset_t));
+
+	dataset->n_values = 1;
+	dataset->start = 0.0;
+	dataset->end = 1.0;
+
+	dataset->columns = doublearray_create(n_columns, dataset->n_values);
+
+	for (unsigned i = 0; i < n_columns; i++) {
+		dataset->columns[i][0] = 1.0;
+	}
+
+	return dataset;
+}
+
 dataset_t * dataset_read(FILE * stream, unsigned n_columns) {
 
 	dataset_t * dataset = malloc(sizeof(dataset_t));
