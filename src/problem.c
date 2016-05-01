@@ -56,6 +56,8 @@ void move_border(problem_t * p, unsigned i, double distance) {
 problem_t problem_create(unsigned resolution, double temperature) {
 	problem_t problem = {0};
 
+	problem.dataset = NULL;
+
 	// Allocate and initialize temperatures
 	problem.resolution = resolution;
 	problem.temperatures = malloc(sizeof(double) * resolution);
@@ -156,9 +158,9 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         }
 
         // TODO: Update variables dependant on weather 
-        konst.cover         = 0.0;
-        konst.windspeed     = 0.0;
-        konst.Rf            = 0.0;
+        konst.cover         = 0.0; //dataset_interpolate(p->dataset, 0, p->time * dt);
+        konst.windspeed     = 0.0; //dataset_interpolate(p->dataset, 0, p->time * dt);
+        konst.Rf            = 0.0; //dataset_interpolate(p->dataset, 0, p->time * dt);
         konst.q_sol         = 27.3;  // February [W/m²] 
 
 

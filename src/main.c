@@ -34,6 +34,11 @@ int main(int argv, char ** argc) {
 	problem.materials[1] = snow;
 	problem.beta = 0.0;
 
+	// Read and create dataset
+	FILE * datafile = fopen("data.txt", "r");
+	problem.dataset = dataset_read(datafile, 3);
+	fclose(datafile);
+
 
     problem_iterate(&problem, 100000);
     problem_print(&problem);
