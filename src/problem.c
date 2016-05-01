@@ -72,7 +72,7 @@ problem_t problem_create(unsigned resolution, double temperature) {
 	}
 
 	// Initialize boundary temperatures
-	for (unsigned i = 0; i < 4; i++) {
+	for (unsigned i = 0; i < 3; i++) {
 		problem.borders[i].u[0] = temperature;
 		problem.borders[i].u[1] = temperature;
 	}
