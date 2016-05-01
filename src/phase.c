@@ -63,8 +63,6 @@ void phase_update(border_t * a, border_t * b, double * u, material_t * material)
 
     i++;
 
-    // We may want to stop a little before
-
 
     // ---- Interior -----
 	while (i < end) {

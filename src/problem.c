@@ -56,6 +56,8 @@ void move_border(problem_t * p, unsigned i, double distance) {
 problem_t problem_create(unsigned resolution, double temperature) {
 	problem_t problem = {0};
 
+	problem.dataset = NULL;
+
 	// Allocate and initialize temperatures
 	problem.resolution = resolution;
 	problem.temperatures = malloc(sizeof(double) * resolution);
@@ -70,7 +72,7 @@ problem_t problem_create(unsigned resolution, double temperature) {
 	}
 
 	// Initialize boundary temperatures
-	for (unsigned i = 0; i < 4; i++) {
+	for (unsigned i = 0; i < 3; i++) {
 		problem.borders[i].u[0] = temperature;
 		problem.borders[i].u[1] = temperature;
 	}

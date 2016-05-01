@@ -1,5 +1,6 @@
 #pragma once
 #include "material.h"
+#include "dataset.h"
 #include "phase.h"
 
 
@@ -30,6 +31,9 @@ typedef struct {
 
 	//TODO: Description and better name
 	double beta;
+
+	// Set of weather data
+	dataset_t * dataset;
 
 } problem_t;
 

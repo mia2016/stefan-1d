@@ -34,11 +34,18 @@ double dataset_interpolate(dataset_t * dataset, unsigned column, double position
 
 /**
  * Read a dataset from a stream.
- * The dataset is expected to be a list of values separated by spaces. Lines
- * starting with # are ignored.
+ * The dataset is expected to be a list of values separated by spaces.
  *
  * @param file File stream to read from
  * @param n_columns Number of columns to read
  * @return Dataset with data from file
  */
 dataset_t * dataset_read(FILE * stream, unsigned n_columns);
+
+/**
+ * Create a dataset with only one point for each column.
+ *
+ * @param n_columns Number of columns for the created dataset
+ * @return Dataset with given number of columns initialized to 0
+ */
+dataset_t * dataset_create(unsigned n_columns);

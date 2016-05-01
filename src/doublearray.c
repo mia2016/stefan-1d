@@ -11,7 +11,7 @@ double ** doublearray_create(unsigned n_columns, unsigned n_values) {
 	}
 
 	for (unsigned i = 0; i < n_columns; i++) {
-		array[i] = malloc(sizeof(double *) * n_values);
+		array[i] = malloc(sizeof(double) * n_values);
 
 		if (array[i] == NULL) {
 			error_fatal("Could not allocate memory for double array");
@@ -35,7 +35,7 @@ void doublearray_destroy(doublearray_t array) {
 
 void doublearray_resize(doublearray_t array, unsigned n_values) {
     for (unsigned i = 0; array[i] != NULL; i++) {
-		array[i] = realloc(array[i], n_values);
+		array[i] = realloc(array[i], sizeof(double) * n_values);
         
         if (array[i] == NULL) {
             error_fatal("Failed to allocate more memory for dobule array");
