@@ -35,12 +35,12 @@ int main(int argv, char ** argc) {
 	problem.beta = 0.3;
 
 	// Read and create dataset
-	FILE * datafile = fopen("data.txt", "r");
+	FILE * datafile = fopen("data.csv", "r");
 	if (datafile == NULL) {
 		error_warning("Could not open input file. Using fake values.");
-		problem.dataset = dataset_create(3);
+		problem.dataset = dataset_create(4);
 	} else {
-		problem.dataset = dataset_read(datafile, 3);
+		problem.dataset = dataset_read(datafile, 4);
 		fclose(datafile);
 	}
     

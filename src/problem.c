@@ -193,12 +193,13 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         }
 
         // TODO: Update variables dependant on weather 
-        konst.cover         = 1.0;                          // Cloud cover
-        konst.windspeed     = 1.0*konst.dt/konst.dx;        // Wind speed
-        konst.Rf            = 0.6;                          // Relative humidity
+		double time = p->time * konst.dt;
+        konst.cover         = 10.0 * dataset_interpolate(p->dataset, 3, time);                          // Cloud cover
+        konst.windspeed     = dataset_interpolate(p->dataset, 0, time) * konst.dt/konst.dx;        // Wind speed
+        konst.Rf            = dataset_interpolate(p->dataset, 2, time);                          // Relative humidity
         konst.q_sol         = -27.3*pow(konst.dt, 3.0);     // February [W/m²] 
-        p->borders[2].u[1]  = 278.15;                       // Air temperature
-    
+        p->borders[2].u[1]  = dataset_interpolate(p->dataset, 1, time) + 273.15;                       // Air temperature
+
         // Calculate variables needed in heat flux calculation
         konst.e_l     = 0.611*konst.Rf*
             exp(k[4]*(1.0/p->borders[2].u[0]-1.0/p->borders[2].u[1]))*konst.dx*pow(konst.dt, 2.0);
