@@ -24,7 +24,7 @@ void move_border(problem_t * p, unsigned i, double distance) {
 
     unsigned bp = p->borders[i].position;
     double next_position = p->borders[i].position + distance;
-    unsigned movement = (unsigned) next_position - bp;
+    int movement = (int) next_position - (int) bp;
 
     // Move point between phases?
     if (movement < 0) {
@@ -41,7 +41,7 @@ void move_border(problem_t * p, unsigned i, double distance) {
     } else if (movement < 0) {
 
         // Lost point in phase i - it ends up in i+1
-        p->temperatures[bp] = interpolate_value(
+        p->temperatures[bp] = i == 2 ? 0.0 : interpolate_value(
                 (point_t) {bp + 2, p->temperatures[bp + 2]},
                 (point_t) {bp + 1, p->temperatures[bp + 1]},
                 (point_t) {next_position, p->borders[i].u[1]},
