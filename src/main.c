@@ -35,18 +35,18 @@ int main(int argv, char ** argc) {
 	problem.beta = 0.3;
 
 	// Read and create dataset
-	FILE * datafile = fopen("data.txt", "r");
+	FILE * datafile = fopen("data.csv", "r");
 	if (datafile == NULL) {
 		error_warning("Could not open input file. Using fake values.");
-		problem.dataset = dataset_create(3);
+		problem.dataset = dataset_create(4);
 	} else {
-		problem.dataset = dataset_read(datafile, 3);
+		problem.dataset = dataset_read(datafile, 4);
 		fclose(datafile);
 	}
     
     problem_print_header(&problem);
-    //problem_iterate(&problem, 8.64*pow(10.0, 9.0)); // Dette gir 10 dager
-    problem_iterate(&problem, pow(10.0, 7.0));
+    problem_iterate(&problem, (unsigned) (8.64*pow(10.0, 9.0))); // Dette gir 10 dager
+    //problem_iterate(&problem, pow(10.0, 8.0));
 	problem_destroy(&problem);
 
     return EXIT_SUCCESS;
