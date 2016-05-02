@@ -45,7 +45,7 @@ int main(int argv, char ** argc) {
 	}
     
     problem_print_header(&problem);
-    problem_iterate(&problem, 8.64*pow(10.0, 9.0)); // Dette gir 10 dager
+    problem_iterate(&problem, (unsigned) (8.64*pow(10.0, 9.0))); // Dette gir 10 dager
     //problem_iterate(&problem, pow(10.0, 8.0));
 	problem_destroy(&problem);
 
