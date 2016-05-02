@@ -2,7 +2,7 @@ set term wxt
 #set terminal png enhanced size 1920, 1080
 #set output "temperature.png"
 set hidden3d
-set pm3d
+#set pm3d
 set palette
 
 set view 110, 150

@@ -9,8 +9,7 @@ constants get_constants(){
     double dt           = 0.0001;                    // Grid size [s]
     double dx           = 0.05;                      // Grid size [m]
     //unsigned dump_rate  = 86400/dt;
-    unsigned dump_rate  = pow(10.0, 5.0);                    // Dumps every day
-
+    unsigned dump_rate  = pow(10, 5);
 
     double q_bi     = -115.0;                       // kjøling fra betong [W/m²]
     double e_o      = 0.611;                        // e_overflate (Vapor pressure) [kPa]

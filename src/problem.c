@@ -124,18 +124,18 @@ void problem_print(problem_t * problem) {
         fprintf(log_file,"%.1f\t%f\t%f\t", 
                 problem->borders[i].u[0], 
                 problem->borders[i].u[1], 
-                problem->borders[i].position//*konst.dx
+                problem->borders[i].position*konst.dx
                );
     }
     fprintf(log_file, "\n");
     
     // Printing heat fluxes
-    fprintf(flux_file, "%f\t", problem->time*konst.dt);
-    for (unsigned i = 0; i < 7; i++){
+    fprintf(flux_file, "%f\t", problem->time*konst.dt/86400.0);
+    for (unsigned i = 0; i < 6; i++){
         fprintf(
             flux_file,
             "%.6f\t",
-            problem->q[i]
+            problem->q[i]*pow(konst.dt, -3.0)
         );
     }
     fprintf(flux_file, "%.6f", problem->borders[0].q[1]);
@@ -149,6 +149,7 @@ void problem_print(problem_t * problem) {
 
 void problem_iterate(problem_t * p, unsigned untilTime) {
     constants konst = get_constants();
+    char warning_printed = 0;
 
     // Checking stability
     for (int i = 0; i < 2; i++){
@@ -194,11 +195,18 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
 
         // TODO: Update variables dependant on weather 
 		double time = p->time * konst.dt;
-        konst.cover         = 10.0 * dataset_interpolate(p->dataset, 3, time);                          // Cloud cover
-        konst.windspeed     = dataset_interpolate(p->dataset, 0, time) * konst.dt/konst.dx;        // Wind speed
-        konst.Rf            = dataset_interpolate(p->dataset, 2, time);                          // Relative humidity
+        /*
+        konst.cover         = 10.0 * dataset_interpolate(p->dataset, 3, time);// Cloud cover
+        konst.windspeed     = dataset_interpolate(p->dataset, 0, time) * konst.dt/konst.dx;// Wind speed
+        konst.Rf            = dataset_interpolate(p->dataset, 2, time);// Relative humidity
         konst.q_sol         = -27.3*pow(konst.dt, 3.0);     // February [W/m²] 
-        p->borders[2].u[1]  = dataset_interpolate(p->dataset, 1, time) + 273.15;                       // Air temperature
+        p->borders[2].u[1]  = dataset_interpolate(p->dataset, 1, time) + 273.15; // Air temperature
+        */
+        konst.cover         = 1.0;
+        konst.windspeed     = 1.0*konst.dt/konst.dx;
+        konst.Rf            = 0.6;
+        konst.q_sol         = -27.3*pow(konst.dt, 3.0);
+        p->borders[2].u[1]  = 278.15;
 
         // Calculate variables needed in heat flux calculation
         konst.e_l     = 0.611*konst.Rf*
@@ -209,14 +217,10 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         p->q[0] = konst.h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
         p->q[1] = (1.0/konst.y)*konst.h_ls*(konst.e_l-konst.e_o);
         p->q[2] = (1-konst.albedo)*konst.q_sol;
-        p->q[3] = k[2]*(0.642*konst.e_l*(1+0.22*pow(cover, 2.0))
+        p->q[3] = k[2]*(0.642*konst.e_l*(1+0.22*pow(konst.cover, 2.0))
                 *pow(p->borders[2].u[1], 3.0)-pow(p->borders[2].u[0], 4.0));
+        p->q[4] = p->q[0]+p->q[1]+p->q[2]+p->q[3];
         
-        p->q[4] = 0.0;
-        for (unsigned i = 0; i < 4; i++){
-            p->q[4] += p->q[i];
-        }
-
         if (p->borders[2].u[0] >= 273.15 && p->borders[1].u[0] < 273.15){
             p->q[5] = -p->beta*(p->q[4]);
         }
@@ -226,14 +230,16 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         
         p->q[6] = (p->temperatures[p_i+1]-p->temperatures[p_i])
             /(p_d/p->materials[0].kappa+(1.0-p_d/p->materials[1].kappa));
-       
+
+
         // Asigning heat fluxes
         p->borders[1].q[0] = -p->q[5]-p->q[6];  // q_snø/is+q_frys
         p->borders[1].q[1] = p->q[6];           // q_snø/is
         p->borders[2].q[0] = p->q[4];           // q_overflate
-        
-        if (p->borders[2].q[0] > 0) {
+       
+        if (p->borders[2].q[0] > 0 && !warning_printed) {
             error_warning("Energy flowing from snow to air not modelled");
+            warning_printed = 1;
         }
 
         // Calculate boundary movements
