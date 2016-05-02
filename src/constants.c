@@ -8,8 +8,8 @@ constants get_constants(){
     // Constants in SI units (Not reduced)
     double dt           = 0.0001;                    // Grid size [s]
     double dx           = 0.05;                      // Grid size [m]
-    unsigned dump_rate  = 86400/dt;
-    //unsigned dump_rate  = pow(10.0, 7.0);                    // Dumps every day
+    //unsigned dump_rate  = 86400/dt;
+    unsigned dump_rate  = pow(10.0, 5.0);                    // Dumps every day
 
 
     double q_bi     = -115.0;                       // kjøling fra betong [W/m²]

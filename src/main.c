@@ -8,7 +8,7 @@
 int main(int argv, char ** argc) {
 
 
-    problem_t problem = problem_create(20, 270.0);
+    problem_t problem = problem_create(20, 270.15);
 
 	material_t ice = {
 		.alpha = 5.81*pow(10.0, -7.0),
@@ -45,8 +45,8 @@ int main(int argv, char ** argc) {
 	}
     
     problem_print_header(&problem);
-    problem_iterate(&problem, 8.64*pow(10.0, 9.0)); // Dette gir 10 dager
-    //problem_iterate(&problem, pow(10.0, 8.0));
+    //problem_iterate(&problem, 8.64*pow(10.0, 9.0)); // Dette gir 10 dager
+    problem_iterate(&problem, pow(10.0, 7.0));
 	problem_destroy(&problem);
 
     return EXIT_SUCCESS;

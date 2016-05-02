@@ -196,7 +196,7 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         konst.cover         = 1.0;                          // Cloud cover
         konst.windspeed     = 1.0*konst.dt/konst.dx;        // Wind speed
         konst.Rf            = 0.6;                          // Relative humidity
-        konst.q_sol         = -27.3*pow(konst.dt, 3.0);     // February [W/m²] 
+        konst.q_sol         = -52.765*pow(konst.dt, 3.0);   // Average over febraury/march
         p->borders[2].u[1]  = 278.15;                       // Air temperature
     
         // Calculate variables needed in heat flux calculation
@@ -208,7 +208,9 @@ void problem_iterate(problem_t * p, unsigned untilTime) {
         p->q[0] = konst.h_ls*(p->borders[2].u[0]-p->borders[2].u[1]);
         p->q[1] = (1.0/konst.y)*konst.h_ls*(konst.e_l-konst.e_o);
         p->q[2] = (1-konst.albedo)*konst.q_sol;
-        p->q[3] = k[2]*(0.642*konst.e_l*pow(p->borders[2].u[1], 3.0)-pow(p->borders[2].u[0], 4.0));
+        p->q[3] = k[2]*(0.642*konst.e_l*(1+0.22*pow(cover, 2.0))
+                *pow(p->borders[2].u[1], 3.0)-pow(p->borders[2].u[0], 4.0));
+        
         p->q[4] = 0.0;
         for (unsigned i = 0; i < 4; i++){
             p->q[4] += p->q[i];
