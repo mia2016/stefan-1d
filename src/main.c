@@ -8,7 +8,7 @@
 int main(int argv, char ** argc) {
 
 
-    problem_t problem = problem_create(10, 270.15);
+    problem_t problem = problem_create(20, 270.0);
 
 	material_t ice = {
 		.alpha = 5.81*pow(10.0, -7.0),
@@ -27,8 +27,8 @@ int main(int argv, char ** argc) {
 
 	//TODO: Continue initialization
 	problem.borders[0].position = 0.0;
-	problem.borders[1].position = 4.5;
-	problem.borders[2].position = 9.5;
+	problem.borders[1].position = 3.5;
+	problem.borders[2].position = 19.7;
 
 	problem.materials[0] = ice;
 	problem.materials[1] = snow;
@@ -45,7 +45,8 @@ int main(int argv, char ** argc) {
 	}
     
     problem_print_header(&problem);
-    problem_iterate(&problem, 100000000);
+    problem_iterate(&problem, 8.64*pow(10.0, 9.0)); // Dette gir 10 dager
+    //problem_iterate(&problem, pow(10.0, 8.0));
 	problem_destroy(&problem);
 
     return EXIT_SUCCESS;
