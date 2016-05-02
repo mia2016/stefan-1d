@@ -12,6 +12,7 @@
 void error_fatal(char * m) {};
 void error_warning(char * m) {};
 void phase_update(border_t * a, border_t * b, double * u, material_t * material) {};
+constants get_constants() {return (constants) {0.0};};
 #include "../src/interpolate.c"
 
 
