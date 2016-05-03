@@ -6,12 +6,15 @@ constants get_constants(){
     constants a;
     
     // Constants in SI units (Not reduced)
-    double dt           = 0.0001;                    // Grid size [s]
-    double dx           = 0.05;                      // Grid size [m]
-    //unsigned dump_rate  = 86400/dt;
-    unsigned dump_rate  = pow(10, 5);
+    double dt           = 0.001;                    // Grid size [s]
+    double dx           = 0.025;                     // Grid size [m]
+    unsigned dump_rate  = 86400/(10*dt);            // Outputs every hour
 
-    double q_bi     = -115.0;                       // kjøling fra betong [W/m²]
+    double effect   = -100;                         // Maximum cooling effect
+    double q_sol    = -53.47;
+    double u_e      = 20;                          // Target temperature for cooling
+    double h_si     = 200.0;                      // Heat transfer coefficient ice/water [W/m²K]
+    double e_a      = 0.73;                         // epsilon_atmosfære (Emissivity)
     double e_o      = 0.611;                        // e_overflate (Vapor pressure) [kPa]
     double em_s     = 0.96;                         // epsilon_snø (Emissivity)
     double sigma    = 5.67036713*pow(10.0, -8.0);   // Stefan-Boltzmann constant [W/m²K^4]
@@ -31,7 +34,11 @@ constants get_constants(){
     a.dump_rate     = dump_rate;
 
     // Constants in reduced units
-    a.q_bi          = q_bi*pow(dt, 3.0);
+    a.q_sol         = q_sol*pow(dt, 3.0);
+    a.u_e           = u_e;
+    a.effect        = effect*pow(dt, 3.0);
+    a.h_si          = h_si*pow(dt, 3.0);
+    a.e_a           = e_a;
     a.e_o           = e_o*dx*dt*dt;
     a.em_s          = em_s;
     a.sigma         = sigma*pow(dt, 3.0);

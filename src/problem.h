@@ -18,7 +18,7 @@ typedef struct {
     // Array of temperatures (and its length)
     unsigned resolution;
     double * temperatures;
-    double q[7];
+    double q[8];
 
     // Current time and timestep
     unsigned time;

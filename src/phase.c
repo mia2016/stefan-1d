@@ -2,7 +2,7 @@
 #include "error.h"
 #include "interpolate.h"
 
-#define SMALL_VALUE 0.0001
+#define SMALL_VALUE 0.1
 
 
 
