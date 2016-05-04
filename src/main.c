@@ -8,7 +8,7 @@
 int main(int argv, char ** argc) {
 
 
-    problem_t problem = problem_create(21, 270);
+    problem_t problem = problem_create(201, 270);
 
 	material_t ice = {
 		.alpha = 5.81*pow(10.0, -7.0),
@@ -26,8 +26,8 @@ int main(int argv, char ** argc) {
 
 
 	problem.borders[0].position = 0.0;
-	problem.borders[1].position = 2.2;
-	problem.borders[2].position = 19.9;
+	problem.borders[1].position = 2.5;
+	problem.borders[2].position = 199.5;
 
 	problem.materials[0] = ice;
 	problem.materials[1] = snow;

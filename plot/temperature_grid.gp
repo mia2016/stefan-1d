@@ -16,7 +16,7 @@ set ylabel "Tid [dager]" offset 0, -1
 set zlabel "Temperatur [K]" rotate by 90 offset 1, 0
 
 set xrange [0:1]
-set yrange [0:10]
+set yrange [0:12]
 set zrange [264:276]
 set cbrange [264:276]
 
@@ -27,9 +27,9 @@ set ztics 4 nomirror
 
 set border 26
 
-splot "results/high_1/temp.out" matrix u ($1/21.0):($2/10.0):3 with pm3d title "a)"
-splot "results/high_05/temp.out" matrix u ($1/42.0):($2/10.0):3 with pm3d title "b)"
-splot "results/middle_1/temp.out" matrix u ($1/21.0):($2/10.0):3 with pm3d title "c)"
-splot "results/middle_05/temp.out" matrix u ($1/42.0):($2/10.0):3 with pm3d title "d)"
-splot "results/low_1/temp.out" matrix u ($1/21.0):($2/10.0):3 with pm3d title "e)"
-splot "results/low_05/temp.out" matrix u ($1/42.0):($2/10.0):3 with pm3d title "f)"
+splot "results/high_1/temp.out" matrix u ($1/201.0):($2/10.0):3 with pm3d title "a)"
+splot "results/high_05/temp.out" matrix u ($1/402.0):($2/10.0):3 with pm3d title "b)"
+splot "results/middle_1/temp.out" matrix u ($1/201.0):($2/10.0):3 with pm3d title "c)"
+splot "results/middle_05/temp.out" matrix u ($1/402.0):($2/10.0):3 with pm3d title "d)"
+splot "results/low_1/temp.out" matrix u ($1/201.0):($2/10.0):3 with pm3d title "e)"
+splot "results/low_05/temp.out" matrix u ($1/402.0):($2/10.0):3 with pm3d title "f)"

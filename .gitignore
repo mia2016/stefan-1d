@@ -4,3 +4,4 @@ obj/
 *.out
 *.sw*
 *.png
+results/

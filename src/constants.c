@@ -7,12 +7,12 @@ constants get_constants(){
     
     // Constants in SI units (Not reduced)
     double dt           = 0.001;                    // Grid size [s]
-    double dx           = 0.025;                     // Grid size [m]
+    double dx           = 0.005;                     // Grid size [m]
     unsigned dump_rate  = 86400/(10*dt);            // Outputs every hour
 
-    double effect   = -100;                         // Maximum cooling effect
+    double effect   = -500;                         // Maximum cooling effect
     double q_sol    = -53.47;
-    double u_e      = 20;                          // Target temperature for cooling
+    double u_e      = 30;                          // Target temperature for cooling
     double h_si     = 200.0;                      // Heat transfer coefficient ice/water [W/m²K]
     double e_a      = 0.73;                         // epsilon_atmosfære (Emissivity)
     double e_o      = 0.611;                        // e_overflate (Vapor pressure) [kPa]
