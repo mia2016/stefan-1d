@@ -11,17 +11,17 @@ int main(int argv, char ** argc) {
     problem_t problem = problem_create(201, 270);
 
 	material_t ice = {
-		.alpha = 5.81*pow(10.0, -7.0),
-		.rho = 887.0,
+		.alpha = 5.7795*pow(10.0, -7.0),
+		.rho = 888.0,
 		.L = 334000.0,
-		.kappa = 2.04
+		.kappa = 2.0161
 	};
 
 	material_t snow = {
-		.alpha = 8.6*pow(10.0, -7.0),
-		.rho = 450.0,
+		.alpha = 6.6671*pow(10.0, -7.0),
+		.rho = 584,
 		.L = 334000.0,
-		.kappa = 0.80
+		.kappa = 0.8048
 	};
 
 
